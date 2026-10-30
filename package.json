@@ -1,0 +1,24 @@
+{
+  "name": "farmer-equipment-rental",
+  "version": "1.0.0",
+  "description": "AgriRent - A peer-to-peer web application connecting farmers to rent machinery from equipment owners",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.3",
+    "multer": "^1.4.5-lts.1"
+  },
+  "keywords": [
+    "agriculture",
+    "equipment-rental",
+    "farming",
+    "marketplace",
+    "sharing-economy"
+  ],
+  "author": "",
+  "license": "ISC"
+}

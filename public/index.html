@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriRent - Farm Equipment & Machinery Rental Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              950: '#052e16',
+            },
+            harvest: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased">
+
+  <!-- ============================================================ -->
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <!-- ============================================================ -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- ============================================================ -->
+  <!-- TOP BANNER (DEMO SWITCHER BAR) -->
+  <!-- ============================================================ -->
+  <div class="bg-slate-900 text-slate-300 px-4 py-2 text-xs border-b border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 font-bold border border-emerald-800 text-[11px]">
+          ● Live Demo Environment
+        </span>
+        <span class="hidden sm:inline text-slate-400">Switch persona to test both Farmer (Renter) & Owner (Lessor) perspectives:</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Persona Quick Dropdown -->
+        <div class="relative group">
+          <button class="flex items-center gap-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition">
+            <span class="text-slate-400 font-normal">Active User:</span>
+            <span id="navUserName">Sunil Kadam</span>
+            <span id="navRoleBadge"></span>
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+
+          <div class="absolute right-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-2 hidden group-hover:block z-50">
+            <div class="text-[10px] uppercase font-bold text-slate-400 px-2 py-1">Choose Test Persona</div>
+            <div id="demoPersonaSelector" class="space-y-1"></div>
+            <div class="border-t border-slate-100 mt-2 pt-2">
+              <button id="resetDemoDbBtn" class="w-full text-left px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition font-medium flex items-center justify-between">
+                <span>Reset Demo Database</span>
+                <span>↻</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MAIN NAVBAR -->
+  <!-- ============================================================ -->
+  <header class="sticky top-0 z-40 glass-header border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Logo -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="App.switchView('marketplace')">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-700 text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-md shadow-emerald-700/20">
+          🚜
+        </div>
+        <div>
+          <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-1">
+            Agri<span class="text-emerald-700">Rent</span>
+          </span>
+          <span class="hidden sm:block text-[11px] font-semibold text-slate-500 uppercase tracking-widest -mt-1">
+            Farm Machinery Marketplace
+          </span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 sm:gap-2">
+        <button data-nav-view="marketplace" class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-emerald-800 bg-emerald-50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <span class="hidden sm:inline">Browse Machinery</span>
+          <span class="sm:hidden">Explore</span>
+        </button>
+
+        <button data-nav-view="farmer-bookings" class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+          <span>My Rentals</span>
+        </button>
+
+        <button data-nav-view="owner-portal" class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+          <span>Owner Portal</span>
+        </button>
+      </nav>
+
+      <!-- Right Action Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Chat Modal Shortcut -->
+        <button onclick="ChatView.openChatModal()" title="In-app Messages" class="relative p-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition">
+          <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+        </button>
+
+        <!-- List Equipment CTA -->
+        <button onclick="OwnerView.openAddEquipmentModal()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-700/20 transition flex items-center gap-2">
+          <span>+</span>
+          <span class="hidden md:inline">List Machinery</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- VIEW 1: MARKETPLACE & EXPLORE -->
+  <!-- ============================================================ -->
+  <main id="viewMarketplace" class="flex-1 pb-16">
+    <!-- Hero Banner -->
+    <section class="hero-gradient text-white py-12 sm:py-16 px-4 sm:px-6 relative overflow-hidden">
+      <div class="max-w-7xl mx-auto relative z-10">
+        <div class="max-w-3xl">
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/80 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-4 backdrop-blur">
+            🌾 Modern Agricultural Custom Hiring & Rental Network
+          </span>
+          <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+            Rent Farm Equipment & Tractors <br class="hidden sm:block">From Verified Local Owners
+          </h1>
+          <p class="mt-3 text-emerald-100/90 text-sm sm:text-base leading-relaxed max-w-2xl">
+            Save capital expenditure on high-cost machinery. Rent high-performance tractors, combine harvesters, rotavators, and precision spraying drones with optional skilled drivers.
+          </p>
+        </div>
+
+        <!-- Search Bar with Live Location & Inputs -->
+        <div class="mt-8 bg-white p-3 sm:p-4 rounded-3xl shadow-2xl border border-emerald-700/30 text-slate-800 flex flex-col md:flex-row gap-3">
+          <div class="flex-1 flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200">
+            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" id="marketSearchInput" placeholder="Search machine, brand (e.g. John Deere, Mahindra, Drone, Harvester)..." class="w-full bg-transparent text-sm focus:outline-none font-medium">
+          </div>
+
+          <div class="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200 md:w-64">
+            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+            <span class="text-xs font-semibold text-slate-700 truncate">Delivery to your farm</span>
+          </div>
+
+          <button onclick="FarmerView.loadMarketplace()" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl text-sm transition shadow-lg flex items-center justify-center gap-2">
+            <span>Find Machinery</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters & Catalog Body -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+      <!-- Category Pills -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-3 no-scrollbar">
+        <button onclick="FarmerView.setCategory('all')" data-category="all" class="cat-pill px-4 py-2 rounded-full text-sm font-semibold bg-emerald-700 text-white shadow-sm transition whitespace-nowrap">
+          🚜 All Machinery
+        </button>
+        <button onclick="FarmerView.setCategory('Tractors')" data-category="Tractors" class="cat-pill px-4 py-2 rounded-full text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Tractors (35-75+ HP)
+        </button>
+        <button onclick="FarmerView.setCategory('Harvesting')" data-category="Harvesting" class="cat-pill px-4 py-2 rounded-full text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Combine Harvesters & Balers
+        </button>
+        <button onclick="FarmerView.setCategory('Tillage')" data-category="Tillage" class="cat-pill px-4 py-2 rounded-full text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Rotavators & Ploughs
+        </button>
+        <button onclick="FarmerView.setCategory('Sprayers & Drones')" data-category="Sprayers & Drones" class="cat-pill px-4 py-2 rounded-full text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Agri Drones & Sprayers
+        </button>
+        <button onclick="FarmerView.setCategory('Irrigation')" data-category="Irrigation" class="cat-pill px-4 py-2 rounded-full text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition whitespace-nowrap">
+          Pumps & Irrigation Sets
+        </button>
+      </div>
+
+      <!-- Quick Filter Toggles & Counter Bar -->
+      <div class="mt-4 bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 shadow-sm">
+        <div class="flex flex-wrap items-center gap-6">
+          <!-- Price Filter Slider -->
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700">Max Budget:</span>
+            <input type="range" id="filterMaxRate" min="500" max="10000" step="500" value="10000" class="w-28 sm:w-36 accent-emerald-600">
+            <span id="filterMaxRateLabel" class="font-bold text-emerald-800">₹10,000</span>
+          </div>
+
+          <!-- Min HP Filter -->
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700">Min Power:</span>
+            <select id="filterMinHp" class="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-emerald-600">
+              <option value="">Any HP</option>
+              <option value="40">40+ HP</option>
+              <option value="50">50+ HP</option>
+              <option value="60">60+ HP</option>
+            </select>
+          </div>
+
+          <!-- Has Driver Filter -->
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="filterHasOperator" class="w-4 h-4 rounded text-emerald-600 accent-emerald-600">
+            <span class="font-bold text-slate-700">👨‍🌾 With Operator / Driver</span>
+          </label>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span id="equipmentCountLabel" class="font-semibold text-slate-500">Loading equipment...</span>
+          <button onclick="FarmerView.resetFilters()" class="text-emerald-700 hover:text-emerald-900 font-semibold underline">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Equipment Cards Grid -->
+      <div id="equipmentGrid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Rendered via farmerView.js -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- VIEW 2: FARMER RENTALS & BOOKINGS -->
+  <!-- ============================================================ -->
+  <main id="viewFarmerBookings" class="hidden flex-1 pb-16 max-w-7xl mx-auto px-4 sm:px-6 w-full mt-6">
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-black text-slate-900">Farmer Rental Dashboard</h2>
+        <p class="text-sm text-slate-500 mt-1">Track your active machinery in the field, inspection sign-offs, and agreements.</p>
+      </div>
+      <button onclick="App.switchView('marketplace')" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-sm transition shadow-sm">
+        + Rent Another Machine
+      </button>
+    </div>
+
+    <!-- Bookings List -->
+    <div id="farmerBookingsContainer"></div>
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- VIEW 3: EQUIPMENT OWNER PORTAL -->
+  <!-- ============================================================ -->
+  <main id="viewOwnerPortal" class="hidden flex-1 pb-16 max-w-7xl mx-auto px-4 sm:px-6 w-full mt-6">
+    <!-- Owner Profile & Metrics Header -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 font-black text-2xl flex items-center justify-center border border-amber-200 shadow-sm">
+            🚜
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-2xl font-black text-slate-900">Patil Agri Machinery & Custom Hiring</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Verified Lessor</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Lessor Hub • Pune & Western Maharashtra Fleet • Response Time &lt; 15 mins</p>
+          </div>
+        </div>
+
+        <button onclick="OwnerView.openAddEquipmentModal()" class="px-5 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl text-sm transition shadow-lg flex items-center justify-center gap-2">
+          <span>+ Add Machinery to Fleet</span>
+        </button>
+      </div>
+
+      <!-- Quick Metrics Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Total Rental Income</div>
+          <div id="ownerTotalEarnings" class="text-2xl font-black text-emerald-800 mt-1">₹0</div>
+          <div class="text-[10px] text-emerald-700 font-semibold mt-0.5">Net completed & active</div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Active in Fields</div>
+          <div id="ownerActiveRentals" class="text-2xl font-black text-slate-900 mt-1">0</div>
+          <div class="text-[10px] text-slate-500 mt-0.5">Currently working</div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Pending Requests</div>
+          <div id="ownerPendingRequests" class="text-2xl font-black text-amber-600 mt-1">0</div>
+          <div class="text-[10px] text-amber-700 mt-0.5">Requires your approval</div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs text-slate-500 font-medium">Listed Machinery</div>
+          <div id="ownerMachineryCount" class="text-2xl font-black text-slate-900 mt-1">0</div>
+          <div class="text-[10px] text-slate-500 mt-0.5">In active fleet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Owner Tabs Navigation -->
+    <div class="border-b border-slate-200 flex gap-4 overflow-x-auto mb-6">
+      <button id="ownerTabBtn_requests" onclick="OwnerView.setTab('requests')" class="px-4 py-2 font-bold text-sm text-emerald-800 border-b-2 border-emerald-700 whitespace-nowrap">
+        📥 Rental Requests Pipeline
+      </button>
+      <button id="ownerTabBtn_machinery" onclick="OwnerView.setTab('machinery')" class="px-4 py-2 font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+        🚜 Machinery Fleet Management
+      </button>
+      <button id="ownerTabBtn_earnings" onclick="OwnerView.setTab('earnings')" class="px-4 py-2 font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+        💰 Financial & Earnings Log
+      </button>
+    </div>
+
+    <!-- Tab 1: Requests -->
+    <div id="ownerPane_requests">
+      <div id="ownerRequestsList"></div>
+    </div>
+
+    <!-- Tab 2: Machinery -->
+    <div id="ownerPane_machinery" class="hidden">
+      <div id="ownerMachineryList"></div>
+    </div>
+
+    <!-- Tab 3: Earnings -->
+    <div id="ownerPane_earnings" class="hidden">
+      <div id="ownerEarningsDetails"></div>
+    </div>
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 1: EQUIPMENT DETAIL & LIVE BOOKING CALCULATOR -->
+  <!-- ============================================================ -->
+  <div id="equipmentDetailModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col relative">
+      <div class="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <h3 class="font-black text-slate-900 text-lg">Equipment Specification & Booking</h3>
+        <button onclick="Utils.closeModal('equipmentDetailModal')" class="p-2 text-slate-400 hover:text-slate-700 text-xl font-bold rounded-xl hover:bg-slate-100">✕</button>
+      </div>
+      <div id="equipmentDetailModalContent" class="p-6"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 2: ADD NEW EQUIPMENT LISTING -->
+  <!-- ============================================================ -->
+  <div id="addEquipmentModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col relative">
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <div>
+          <h3 class="font-black text-slate-900 text-lg">List Farm Machinery for Rent</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Publish your idle tractors, implements, or harvesters to earn daily rent.</p>
+        </div>
+        <button onclick="Utils.closeModal('addEquipmentModal')" class="p-2 text-slate-400 hover:text-slate-700 text-xl font-bold rounded-xl hover:bg-slate-100">✕</button>
+      </div>
+
+      <form id="addEquipmentForm" onsubmit="OwnerView.handleAddEquipmentSubmit(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Equipment Title</label>
+          <input type="text" id="eqTitle" required placeholder="e.g. John Deere 5050D Tractor with Cultivator" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Category</label>
+            <select id="eqCategory" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+              <option value="Tractors">Tractors</option>
+              <option value="Harvesting">Harvesting & Balers</option>
+              <option value="Tillage">Tillage & Rotavators</option>
+              <option value="Sprayers & Drones">Sprayers & Drones</option>
+              <option value="Irrigation">Irrigation & Pumps</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Brand & Model</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="eqBrand" required placeholder="Brand (e.g. Swaraj)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600">
+              <input type="text" id="eqModel" placeholder="Model (e.g. 744 FE)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Horsepower (HP)</label>
+            <input type="number" id="eqHp" placeholder="e.g. 50" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Daily Rent (₹/day)</label>
+            <input type="number" id="eqDailyRate" required placeholder="e.g. 2000" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Hourly Rent (₹/hr)</label>
+            <input type="number" id="eqHourlyRate" placeholder="e.g. 350" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Refundable Security Deposit (₹)</label>
+            <input type="number" id="eqDeposit" value="3000" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Base Location / District</label>
+            <input type="text" id="eqLocation" placeholder="e.g. Pune, Maharashtra" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 font-medium">
+          </div>
+        </div>
+
+        <!-- Operator Options -->
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="eqHasOperator" checked class="w-4 h-4 text-emerald-600 rounded">
+            <span class="font-bold text-slate-800">I can provide an experienced driver / operator</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500">Driver extra charge:</span>
+            <input type="number" id="eqOperatorRate" value="400" class="w-24 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold">
+            <span class="text-xs text-slate-500">₹/day</span>
+          </div>
+
+          <label class="flex items-center gap-3 cursor-pointer pt-2 border-t border-slate-200">
+            <input type="checkbox" id="eqDeliveryAvailable" checked class="w-4 h-4 text-emerald-600 rounded">
+            <span class="font-bold text-slate-800">Available for field delivery & transport to farm</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Image URL (High-res photo)</label>
+          <input type="url" id="eqImageUrl" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 text-xs">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Technical Specs & Included Implements (One per line)</label>
+          <textarea id="eqFeatures" rows="3" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 text-xs" placeholder="4 Cylinder Engine&#10;Power Steering&#10;Includes 9-Tyne Cultivator&#10;Serviced last month"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Machinery Description & Instructions</label>
+          <textarea id="eqDescription" rows="2" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 text-xs" placeholder="Describe current condition, attachments, and field suitability..."></textarea>
+        </div>
+
+        <button type="submit" id="saveEquipmentBtn" class="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl shadow-lg transition">
+          Publish Machinery Listing
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 3: DIGITAL RENTAL AGREEMENT VIEWER -->
+  <!-- ============================================================ -->
+  <div id="agreementModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col relative">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10 no-print">
+        <h3 class="font-black text-slate-900 text-base">AgriRent Certified Legal Lease Agreement</h3>
+        <button onclick="Utils.closeModal('agreementModal')" class="p-2 text-slate-400 hover:text-slate-700 text-xl font-bold rounded-xl hover:bg-slate-100">✕</button>
+      </div>
+      <div id="agreementModalContent"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 4: INSPECTION CHECKLIST (PRE / POST HANDOVER) -->
+  <!-- ============================================================ -->
+  <div id="inspectionModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col relative">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <h3 class="font-black text-slate-900 text-base">Machinery Inspection Checklist</h3>
+        <button onclick="Utils.closeModal('inspectionModal')" class="p-2 text-slate-400 hover:text-slate-700 text-xl font-bold rounded-xl hover:bg-slate-100">✕</button>
+      </div>
+      <div id="inspectionModalContent" class="p-6"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 5: REAL-TIME IN-APP CHAT (FARMER & OWNER) -->
+  <!-- ============================================================ -->
+  <div id="chatModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full h-[85vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+      <!-- Chat Header -->
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-emerald-700 text-white rounded-xl flex items-center justify-center font-bold">💬</div>
+          <div>
+            <h4 id="chatHeaderTitle" class="font-bold text-slate-900 text-sm">Direct Messaging</h4>
+            <div id="chatHeaderSubtitle" class="text-xs text-slate-500">Connect with machine owners & farmers</div>
+          </div>
+        </div>
+        <button onclick="ChatView.closeChatModal()" class="p-2 text-slate-400 hover:text-slate-700 text-xl font-bold rounded-xl hover:bg-slate-200">✕</button>
+      </div>
+
+      <!-- Chat Dual-Pane Body -->
+      <div class="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0">
+        <!-- Left: Conversations List -->
+        <div class="md:col-span-5 border-r border-slate-200 p-3 overflow-y-auto bg-slate-50/50">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Conversations</div>
+          <div id="chatConversationsList" class="space-y-1"></div>
+        </div>
+
+        <!-- Right: Messages Thread -->
+        <div class="md:col-span-7 flex flex-col bg-white min-h-0">
+          <div id="chatMessagesThread" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+
+          <!-- Message Input Form -->
+          <form id="chatSendForm" class="p-3 border-t border-slate-200 flex items-center gap-2 bg-slate-50">
+            <input type="text" id="chatMessageInput" placeholder="Type message to owner / farmer..." class="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-emerald-600">
+            <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs sm:text-sm transition flex items-center gap-1">
+              <span>Send</span>
+              <span>➤</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 6: REVIEWS SUBMISSION -->
+  <!-- ============================================================ -->
+  <div id="reviewModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-black text-slate-900 text-lg">Rate & Review Machinery</h3>
+        <button onclick="Utils.closeModal('reviewModal')" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <form id="reviewForm" onsubmit="FarmerView.handleReviewSubmit(event)" class="space-y-4 text-xs sm:text-sm">
+        <input type="hidden" id="reviewEquipmentId">
+        <input type="hidden" id="reviewBookingId">
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Equipment Rating</label>
+          <select id="reviewRatingSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-amber-600">
+            <option value="5" selected>★★★★★ 5 Stars - Exceptional Performance</option>
+            <option value="4">★★★★☆ 4 Stars - Very Good</option>
+            <option value="3">★★★☆☆ 3 Stars - Average Working Condition</option>
+            <option value="2">★★☆☆☆ 2 Stars - Subpar</option>
+            <option value="1">★☆☆☆☆ 1 Star - Unsatisfactory</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Your Field Experience & Review</label>
+          <textarea id="reviewComment" rows="3" required placeholder="How did the machine perform? Fuel consumption, driver skill, field tilth..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-emerald-600 text-xs"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl shadow transition">
+          Submit Review
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================================ -->
+  <footer class="bg-slate-900 text-slate-400 py-10 px-4 sm:px-6 border-t border-slate-800 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🚜</span>
+        <div>
+          <div class="font-black text-white text-base">AgriRent Platform</div>
+          <div>Connecting Indian & Global Farmers with Agricultural Machinery Lessors</div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-6 text-slate-400">
+        <span>✓ Digital Rental Agreement</span>
+        <span>✓ Handover Inspection Guarantee</span>
+        <span>✓ Safe Refundable Deposits</span>
+        <span>✓ Verified Custom Hiring Lessors</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/farmerView.js"></script>
+  <script src="/js/ownerView.js"></script>
+  <script src="/js/chatView.js"></script>
+  <script src="/js/inspectionView.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
