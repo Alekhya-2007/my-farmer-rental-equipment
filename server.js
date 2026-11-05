@@ -390,7 +390,7 @@ app.get('*', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT,'0.0.0.0', () => {
   console.log(`=======================================================`);
   console.log(`🚜 AgriRent Server is running at http://localhost:${PORT}`);
   console.log(`🌾 Dual Portals: Farmers Rent & Equipment Owners List`);
