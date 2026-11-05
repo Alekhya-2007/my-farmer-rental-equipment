@@ -12,11 +12,6 @@
     "express": "^4.22.3",
     "multer": "^1.4.5-lts.1"
   },
-<<<<<<< HEAD
-Your local package.json content
-=======
-GitHub package.json content
->>>>>>> origin/main
   "keywords": [
     "agriculture",
     "equipment-rental",
